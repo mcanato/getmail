@@ -920,6 +920,15 @@ class IMAPRetrieverBase(RetrieverSkeleton):
         '','','')
         return xoauth_string
 
+    def generateAuth2Legged(self,consumer_key,consumer_key_secret):
+	consumer = OAuthEntity(consumer_key, consumer_key_secret)	
+	access_token = OAuthEntity('','')
+        xoauth_string = GenerateXOauthString(
+        consumer, access_token, self.conf['oauth_user'], 'imap',
+        self.conf['oauth_user'],'','')
+        return xoauth_string
+
+
     def _getheaderbyid(self, msgid):
         self.log.trace()
         return self._getmsgpartbyid(msgid, '(RFC822[header])')
@@ -946,9 +955,14 @@ class IMAPRetrieverBase(RetrieverSkeleton):
                     self.conf['password']
                 )
             elif self.conf['use_xoauth']:
-                token=self.conf['oauth_token']
-                token_secret=self.conf['oauth_token_secret']
-                xoauth_string = self.generateAuth(token,token_secret)
+		if self.conf['use_oauth_2_legged']:
+                	consumer_key=self.conf['consumer_key']
+	                consumer_key_secret=self.conf['consumer_key_secret']
+        	        xoauth_string = self.generateAuth2Legged(consumer_key,consumer_key_secret)
+		else:
+                	token=self.conf['oauth_token']
+	                token_secret=self.conf['oauth_token_secret']
+        	        xoauth_string = self.generateAuth(token,token_secret)
                 self.conn.authenticate('XOAUTH', lambda x: xoauth_string)
             else:
                 self._parse_imapcmdresponse('login', self.conf['username'],
